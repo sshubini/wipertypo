@@ -4,60 +4,68 @@ const ctx = canvas.getContext('2d');
 canvas.width = innerWidth
 canvas.height = innerHeight
 
-const mouse = {
-    x: innerWidth / 2,
-    y: innerHeight / 2
-}
-
 /*Event Listener*/
-addEventListener('mousemove', mouseMoveHandler)
 addEventListener('resize' , resizeHandler)
 
-
-function mouseMoveHandler(e) {
-    mouse.x = e.clientX
-    mouse.y = e.clientY
-}
 
 //helper
 function getDist(x1,x2,y1,y2){
     return Math.sqrt(Math.pow(x1-x2,2)+Math.pow(y1-y2,2))
 }
 
+function getAngle(x1,y1,x2,y2){
+    const width = x1-x2;
+    const height = y1-y2;
+    const radian = Math.atan2(height,width);
+    const angle = 180 - (radian*180/Math.PI)
+    return angle.toFixed(0)
+}
+
+
+let centerX = canvas.width/2
+let centerY = canvas.height
+let radian = 0
+let lineAngle=0;
+let circleAngle=0;
+let rightFlag = false;
+
 // Object
-class Person{
-    constructor(x,y,radius,color) {
+class Ball{
+    constructor(x,y,speed,centerRadius) {
         this.x = x;
         this.y = y;
-        this.radius = radius;
-        this.color = color;
+        this.speed=speed;
+        this.centerRadius = centerRadius;
     }
 
     draw(){
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false)
-        ctx.fillStyle = this.color;
+        ctx.arc(this.x, this.y, 15, 0, Math.PI * 2, false)
         ctx.fill();
         ctx.closePath();
     }
     update(){
+        circleAngle = getAngle(centerX,centerY,this.x,this.y)
+        if(Math.abs(circleAngle-lineAngle)<2){
+            this.x = centerX+(Math.cos(-radian)*this.centerRadius);
+            this.y = centerY+(Math.sin(-radian)*this.centerRadius);
+            if(!rightFlag){
+                //this.x += 1;
+                //this.y += 1;
+            }else{
+                //this.x -= 1
+                //this.y += 1
+            }
+        }else{
 
+        }
+      
+        this.y+=this.speed;
         this.draw()
     }
 }
 
 
-
-class PersonOne extends Person {
-    update(){
-        this.x=mouse.x;
-        this.y=mouse.y;
-        this.draw()
-    }
-}
-
-
-let angle = 0
 class Line{
     constructor(x,y,speed,height) {
         this.x = x;
@@ -66,45 +74,70 @@ class Line{
         this.height= height;
     }
     draw(){
-        let x1 = this.x + (Math.cos(angle)*this.height);
-        let y1 = this.y + (Math.sin(angle)*this.height);
+        ctx.lineWidth = 10
         ctx.beginPath();
-        ctx.moveTo(canvas.width/2,canvas.height);
-        ctx.lineTo(x1,y1);
-        ctx.strokeStyle = 'red';
+        ctx.moveTo(this.x,this.y);
+        ctx.lineTo(this.x1,this.y1);
+        ctx.strokeStyle = 'black';
         ctx.stroke();
         ctx.closePath();
     }
     update(){
-        if(angle>Math.PI*2 || angle<0){
+        if(radian<0||radian>Math.PI){
             this.speed = -this.speed;
+            rightFlag = !rightFlag
         }
-        angle+=this.speed
+        this.x1 = this.x + (Math.cos(-radian)*this.height);
+        this.y1 = this.y + (Math.sin(-radian)*this.height);
+        radian+=this.speed
+        lineAngle = (radian*180/Math.PI).toFixed(0);
         this.draw()
     }
 }
 
+let x,y,speed,centerRadius;
+let ballArr=[]
+for(let i =0; i<50;i++){
+    x = Math.floor(Math.random()*canvas.width)
+    y = 0;
+    speed = Math.floor(Math.random()*2.5)+0.5
+    centerRadius = Math.floor(Math.sqrt(Math.pow(centerX-x,2)+Math.pow(centerY-y,2)))
+    const ball = new Ball(x,y,speed,centerRadius)
+    ballArr.push(ball)
+    console.log(ball)
+}
 
-
-
-const personOne = new PersonOne(canvas.width/2,canvas.height/2, 10,'#999');
-const line = new Line(0,0,1,canvas.height)
-line.draw()
-
+let line = new Line(centerX,centerY,0.01,canvas.width/2)
 // animation
 function animate() {
         requestAnimationFrame(animate)
         ctx.clearRect(0,0,canvas.width,canvas.height)
-        personOne.update();
+        for(let i =0; i<50;i++){
+            ballArr[i].update();
+        }
         line.update()
 }
-//animate();
+animate();
 
 // resize
 function resizeHandler(e) {
     canvas.width = innerWidth
     canvas.height = innerHeight
+    init();
 }
 
-
+function init(){
+    centerX = canvas.width/2;
+    centerY = canvas.height;
+    line = new Line(centerX,centerY,0.01,canvas.width/2)
+    ballArr=[];
+    for(let i =0; i<50;i++){
+        x = Math.floor(Math.random()*canvas.width)
+        y = 0;
+        speed = Math.floor(Math.random()*2.5)+0.5
+        centerRadius = Math.floor(Math.sqrt(Math.pow(centerX-x,2)+Math.pow(centerY-y,2)))
+        const ball = new Ball(x,y,speed,centerRadius)
+        ballArr.push(ball)
+    }
+}
 
