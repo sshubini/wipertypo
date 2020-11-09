@@ -70,22 +70,29 @@ addEventListener('resize' , resizeHandler)
 
 
 
-let centerX = canvas.width/2
-let centerY = canvas.height
-let radian = 0
+let wiperWidth;
+let centerX ;
+let centerY ;
+let radian = 0;
 let lineAngle=0;
 let circleAngle=0;
 let rightFlag = false;
 
+let x,y,speed,trotate,centerRadius,text;
+let line;
+const alphabet = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
+let ballArr=[]
+
 // Object
 class Ball{
-    constructor(x,y,speed,centerRadius,text) {
+    constructor(x,y,speed,trotate,centerRadius,text) {
         this.x = x;
         this.y = y;
         this.speed=speed;
         this.centerRadius = centerRadius;
 
         this.text = text;
+        this.trotate = trotate;
         this.mass =1;
         this.velocity = {
             x: Math.random()-0.5,
@@ -94,12 +101,12 @@ class Ball{
     }
 
     draw(){
-        ctx.lineWidth = 1
+        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.arc(this.x, this.y, 15, 0, Math.PI * 2, false);
-        ctx.strokeStyle = '#f9f9f9';
+        ctx.strokeStyle = 'transparent';
         ctx.stroke();
-        ctx.fillStyle = '#e9e9e9';
+        ctx.fillStyle = '#fff';
         ctx.textAlign = "center";
         ctx.textBaseline = 'middle';
         ctx.font = "small-caps bold 32px arial";
@@ -107,38 +114,37 @@ class Ball{
         ctx.closePath();
     }
     update(ballArr){
-        circleAngle = getAngle(centerX,centerY,this.x,this.y)
-        this.centerRadius = getDist(this.x,this.y,centerX,centerY)
-
+        circleAngle = getAngle(centerX,centerY,this.x,this.y);
+        this.centerRadius = getDist(this.x,this.y,centerX,centerY);
+        //라인과 글씨의 각도가 같으면
         if(Math.abs(circleAngle-lineAngle)<2 && this.centerRadius < canvas.height){
+            //캔버스 아래쪽이면 그대로 내려가고
             if(this.y>canvas.height-50){
                 this.y += this.speed;
-
+            // 캔버스 윗쪽이면 라인을 따라서 간다
             }else{
                 this.x = centerX+(Math.cos(-radian)*this.centerRadius);
                 this.y = centerY+(Math.sin(-radian)*this.centerRadius);
             }
         }else{
             this.y+=this.speed;
+            //글씨들이 밑으로 내려가면 다시 위로 배치 (무한루프)
             if(this.y>canvas.height+15){
                 this.x = Math.floor(Math.random()*canvas.width);
                 this.y = Math.floor(Math.random()*-canvas.height);
             }
         }
-
+        //글씨들이 서로 붙지않게
         for (let i=0;i<ballArr.length;i++){
             if(getDist(this.x,this.y,ballArr[i].x,ballArr[i].y)-30<0){
                 resolveCollision(this,ballArr[i])
             }
         }
-
         this.x +=this.velocity.x;
         this.y +=this.velocity.y;
-        this.draw()
+        this.draw();
     }
 }
-
-
 class Line{
     constructor(x,y,speed,height) {
         this.x = x;
@@ -147,13 +153,13 @@ class Line{
         this.height= height;
     }
     draw(){
-        ctx.lineWidth = 10
+        ctx.lineWidth = wiperWidth;
         ctx.beginPath();
         rightFlag?
             ctx.moveTo(this.x-20,this.y):
             ctx.moveTo(this.x+20,this.y);
         ctx.lineTo(this.x1,this.y1);
-        ctx.strokeStyle = '#999';
+        ctx.strokeStyle = '#fff';
         ctx.stroke();
         ctx.closePath();
     }
@@ -172,60 +178,54 @@ class Line{
     }
 }
 
-let x,y,speed,centerRadius,text;
-let ballArr=[]
-const alphabet = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
-for(let i =0; i<100;i++){
-    x = Math.floor(Math.random()*canvas.width)
-    y = Math.floor(Math.random()*-canvas.height);
-    speed = 1//Math.round(Math.random()*2.5)+0.2
-    centerRadius = 0;
-    text=alphabet[Math.floor(Math.random()*alphabet.length)];
-    if(i!==0){
-        for (let j=0;j<ballArr.length;j++){
-            if(getDist(x,y,ballArr[j].x,ballArr[j].y)-30<0){
-                x = Math.floor(Math.random()*canvas.width);
-                y = Math.floor(Math.random()*-canvas.height);
-                j=-1
+function init(){
+    rightFlag = false;
+    wiperWidth =10 ;
+    centerX = canvas.width/2;
+    centerY = canvas.height + wiperWidth;
+    line = new Line(centerX,centerY,0.01,canvas.width/2)
+    ballArr=[];
+    for(let i =0; i<100;i++){
+        x = Math.floor(Math.random()*canvas.width)
+        y = Math.floor(Math.random()*-canvas.height);
+        speed = Math.floor(Math.random()*2.5)+0.5
+        centerRadius = Math.floor(Math.sqrt(Math.pow(x-centerX,2)+Math.pow(y-centerY,2)))
+        text=alphabet[Math.floor(Math.random()*alphabet.length)];
+        if(i!==0){
+            for (let j=0;j<ballArr.length;j++){
+                if(getDist(x,y,ballArr[j].x,ballArr[j].y)-30<0){
+                    x = Math.floor(Math.random()*canvas.width);
+                    y = Math.floor(Math.random()*-canvas.height);
+                    j=-1
+                }
             }
         }
+        const ball = new Ball(x,y,speed,trotate,centerRadius,text)
+        ballArr.push(ball)
     }
-    const ball = new Ball(x,y,speed,centerRadius,text)
-    ballArr.push(ball)
 }
 
-let line = new Line(centerX,centerY,0.01,canvas.width/2)
 // animation
 function animate() {
-        requestAnimationFrame(animate)
-        ctx.clearRect(0,0,canvas.width,canvas.height)
-        for(let i =0; i<100;i++){
-            ballArr[i].update(ballArr);
-        }
-        line.update()
+    requestAnimationFrame(animate)
+    ctx.clearRect(0,0,canvas.width,canvas.height)
+    for(let i =0; i<100;i++){
+        ballArr[i].update(ballArr);
+    }
+    line.update()
 }
+
+
+init();
 animate();
+
 
 
 // resize
 function resizeHandler(e) {
-    canvas.width = innerWidth
-    canvas.height = innerHeight
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
     init();
 }
 
-function init(){
-    centerX = canvas.width/2;
-    centerY = canvas.height;
-    line = new Line(centerX,centerY,0.01,canvas.width/2)
-    ballArr=[];
-    for(let i =0; i<50;i++){
-        x = Math.floor(Math.random()*canvas.width)
-        y = 0;
-        speed = Math.floor(Math.random()*2.5)+0.5
-        centerRadius = Math.floor(Math.sqrt(Math.pow(x-centerX,2)+Math.pow(y-centerY,2)))
-        const ball = new Ball(x,y,speed,centerRadius)
-        ballArr.push(ball)
-    }
-}
 
