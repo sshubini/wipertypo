@@ -80,7 +80,9 @@ let rightFlag = false;
 
 let x,y,speed,trotate,centerRadius,text;
 let line;
-const alphabet = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
+// const alphabet = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
+const alphabet = ['열정','끈기','창의력','비젼','성실']
+
 let ballArr=[]
 
 // Object
@@ -180,10 +182,10 @@ class Line{
 
 function init(){
     rightFlag = false;
-    wiperWidth =10 ;
+    wiperWidth = 10 ;
     centerX = canvas.width/2;
     centerY = canvas.height + wiperWidth;
-    line = new Line(centerX,centerY,0.01,canvas.width/2)
+    line = new Line(centerX,centerY,0.01,canvas.height)
     ballArr=[];
     for(let i =0; i<100;i++){
         x = Math.floor(Math.random()*canvas.width)
@@ -212,7 +214,7 @@ function animate() {
     for(let i =0; i<100;i++){
         ballArr[i].update(ballArr);
     }
-    line.update()
+    line.update();
 }
 
 
